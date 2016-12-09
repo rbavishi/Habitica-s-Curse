@@ -5,14 +5,16 @@
 """
 
 from habitican_curse import *
-import logging
+
+user_id = ''
+api_token = ''
 
 # Ability to display symbols
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, '') 
 
 def BookKeepingThread():
     try:
-        G.content = CT.ContentManager()
+	G.content = CT.ContentManager()
     except:
         return
 
@@ -21,21 +23,10 @@ def BookKeepingThread():
     G.user.PrintUserStats()
 
 def main(curses_screen):
-
-    #Initialize the logging facility
-    dbg_level=C.getConfig("debug_lvl")
-    dbg_file=C.getConfig("debug_file")
-
-    if(dbg_file is not None):
-        logging.basicConfig(filename=dbg_file,level=int(dbg_level))
-    else:
-        logging.basicConfig(level=int(dbg_level))
-
-
     G.screen = Screen(curses_screen)
     G.screen.Initialize()
     C.ConfigureRuntime(curses_screen)
-    G.reqManager = RM.RequestManager()
+    G.reqManager = RM.RequestManager() 
     G.reqManager.FetchData()
     G.intf = I.Interface()
     G.intf.Init()
@@ -52,3 +43,4 @@ def main(curses_screen):
 if __name__ == "__main__":
     G.reqManager = RM.RequestManager()
     curses.wrapper(main)
+

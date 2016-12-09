@@ -5,5 +5,3 @@ trial.py
 *.txt
 dist
 *.egg-info
-test_data/
-habitican_curse.log
