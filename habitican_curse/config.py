@@ -7,7 +7,7 @@
 # Standard Library imports
 import curses
 import datetime
-
+import os
 
 NUM_CONTEXT_REGISTERS = 4
 
@@ -82,7 +82,50 @@ def ConfigureRuntime(screen):
 # Parser Settings
 SET_COMMANDS = ["d", "due", "every", "weekly", "plus", "minus"]
 DIFFS      = ["trivial", "easy", "medium", "hard"]
-DATEPARSER = datetime.datetime.strptime 
+DATEPARSER = datetime.datetime.strptime
 DATEFORMATS = ["%d/%m/%Y", "%d/%m/%y"]
 DEFAULT_REPEAT = {'m': True, 't': True, 'w': True, 'th': True, 'f': True, 's': True, 'su': True}
 
+
+# Configuration file settings
+user_config = None
+
+#Read in the configuration files
+def ReadConfigFile():
+    global user_config
+    user_config = dict()
+
+    CONFIG_FILE = os.getenv("HOME")+'/.habiticarc'
+
+    try:
+        f = open(CONFIG_FILE, 'r')
+    except:
+        import sys
+        print "Enter UUID: ",
+        uuid = raw_input().strip()
+        print " "
+        print "Enter API-Key: ",
+        key = raw_input().strip()
+
+        f = open(CONFIG_FILE, 'w+')
+        f.write("uuid="+uuid+"\n")
+        f.write("key="+key+"\n")
+        f.write("debug_lvl=50\n")
+        f.close()
+
+        f = open(CONFIG_FILE, 'r')
+
+    for x in f.xreadlines():
+        x = x[:-1].split("=")
+        user_config[x[0]] = x[1]
+
+    f.close()
+
+def getConfig(value):
+    if( user_config is None):
+        ReadConfigFile()
+
+    if( value in user_config ):
+        return user_config[value]
+
+    return None

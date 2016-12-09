@@ -25,7 +25,7 @@ class MenuItem(object):
     as well as the status object. It is general enough to be used as a
     checklist item, and an actual task item"""
 
-    def __init__(self, task, task_type, taskname, 
+    def __init__(self, task, task_type, taskname,
                  width = -1, front = True):
         self.task = task
         self.task_type = task_type
@@ -51,7 +51,7 @@ class MenuItem(object):
             # Set Coordinates for a task
             self.task.SetXY(C.SCR_MAX_MENU_ROWS+7, 5)
 
-        else:     
+        else:
             self.status = H.Status(self.task_type)
 
         self.x = 0
@@ -71,7 +71,7 @@ class MenuItem(object):
     def SetXY(self, x=0, y=0):
         self.x = x
         self.y = y
-	self.SetStatusXY()
+        self.SetStatusXY()
 
     def SetStatusXY(self):
         if self.front:
@@ -80,100 +80,76 @@ class MenuItem(object):
             self.status.SetXY(self.x, self.y + self.width - 1)
 
 
-    def DisplayName(self, color=0):
+    def DisplayName(self, color=0,highlight=False):
         if hasattr(self.task, "color"):
             color = self.task.color
 
+        #Current task is higlighted, display the details
+        if(highlight):
+            self.task.Display()
+
         status_length = self.status.ReturnLenString()
         first_row_size = self.width - status_length - 1
 
-        G.screen.DisplayCustomColorBold(" "*self.width, color, self.x,
-                                        self.y)
-        G.screen.DisplayCustomColorBold(" "*self.width, color, self.x+1,
-                                        self.y)
+        # Display Task Name
+        G.screen.Display(" "*self.width,  self.x,self.y,
+                         color=C.SCR_COLOR_NEUTRAL,bold=True)
+        G.screen.Display(" "*(first_row_size+1), self.x,
+                           self.y+status_length,highlight=highlight)
+        G.screen.Display(" "*self.width,self.x+1,self.y,
+                color=color,highlight=highlight)
+
+
+        # Show the attributes that can be set (mark,delete, up,down,etc)
         self.status.Display()
+
+        #Add a gray tick if it's completed
         if hasattr(self.task, 'completed') and self.task.completed:
-	    color = C.SCR_COLOR_NEUTRAL
-            G.screen.DisplayCustomColorBold(C.SYMBOL_TICK, color, self.x,
-                                            self.y + status_length)
+            G.screen.Display(C.SYMBOL_TICK, self.x,self.y + status_length,
+                    color=C.SCR_COLOR_NEUTRAL, bold=True,highlight=highlight)
+
+        #If we are set to delete, strikethrough the task name
+        strike=self.status.attributes[C.SYMBOL_DELETE]
+
+        #Print the task name
         if len(self.taskname) < first_row_size: # No need to truncate
             if self.front:
-                G.screen.DisplayCustomColorBold(self.taskname, color, self.x, self.y +
-                                                            status_length + 1)
-            else:
-                G.screen.DisplayCustomColorBold(self.taskname, color, self.x, self.y)
+                G.screen.Display(self.taskname, self.x, self.y + status_length + 1,
+                        color=color, bold=True,strike=strike,highlight=highlight)
 
-            G.screen.Display(" "*self.width, self.x+1, self.y)
+            else:
+                G.screen.Display(self.taskname, self.x, self.y,
+                        color=color, bold=True,strike=strike,highlight=highlight)
+
+            G.screen.Display(" "*self.width, self.x+1, self.y,highlight=highlight)
         else:                                   # We need truncation
             if self.taskname[first_row_size-1] != ' ':
                 if self.front:
-                    G.screen.DisplayCustomColorBold(self.taskname[:first_row_size-1]+"-",
-                                         color, self.x, self.y + status_length + 1)
+                    G.screen.Display(self.taskname[:first_row_size-1]+"-",
+                                     self.x, self.y + status_length + 1,
+                                     color=color, bold=True,strike=strike,highlight=highlight)
                 else:
-                    G.screen.DisplayCustomColorBold(self.taskname[:first_row_size-1]+"-",
-                                         color, self.x, self.y)
-                G.screen.DisplayCustomColorBold(truncate(self.taskname[first_row_size-1:],
-                                              self.width), color,
-                                              self.x+1, self.y)
+                    G.screen.Display(self.taskname[:first_row_size-1]+"-",
+                                     self.x, self.y,
+                                     color=color, bold=True,strike=strike,highlight=highlight)
+                G.screen.Display(truncate(self.taskname[first_row_size-1:],self.width),
+                                 self.x+1, self.y,
+                                 color=color, bold=True,strike=strike,highlight=highlight)
             elif self.taskname[first_row_size-1] == ' ':
                 if self.front:
-                    G.screen.DisplayCustomColorBold(self.taskname[:first_row_size],
-                                         color, self.x, self.y + status_length + 1)
+                    G.screen.Display(self.taskname[:first_row_size],
+                                     self.x, self.y + status_length + 1,
+                                     color=color, bold=True,strike=strike,highlight=highlight)
                 else:
-                    G.screen.DisplayCustomColorBold(self.taskname[:first_row_size],
-                                         color, self.x, self.y)
-                G.screen.DisplayCustomColorBold(truncate(self.taskname[first_row_size:],
-                                              self.width), color,
-                                              self.x+1, self.y)
+                    G.screen.Display(self.taskname[:first_row_size],
+                                     self.x, self.y,
+                                     color=color, bold=True,strike=strike,highlight=highlight)
+                G.screen.Display(truncate(self.taskname[first_row_size:],self.width),
+                                 self.x+1, self.y,
+                                 color=color, bold=True,strike=strike,highlight=highlight)
 
     def HighlightName(self):
-        self.task.Display()
-
-        status_length = self.status.ReturnLenString()
-        first_row_size = self.width - status_length - 1
-
-        # Display Task Details
-
-        G.screen.DisplayCustomColorBold(" "*self.width, C.SCR_COLOR_NEUTRAL, self.x,
-                                        self.y)
-	G.screen.Highlight(" "*(first_row_size+1), self.x,
-			   self.y+status_length)
-        #G.screen.Highlight(" "*self.width, self.x,
-                                        #self.y)
-        G.screen.Highlight(" "*self.width, self.x+1,
-                                        self.y)
-        self.status.Display()
-        if hasattr(self.task, 'completed') and self.task.completed:
-            G.screen.Highlight(C.SYMBOL_TICK, self.x,
-                                            self.y + status_length)
-        if len(self.taskname) < first_row_size:
-            if self.front:
-                G.screen.Highlight(self.taskname, self.x, self.y +
-                                                            status_length + 1)
-            else:
-                G.screen.Highlight(self.taskname, self.x, self.y)
-            G.screen.Highlight(" "*self.width, self.x+1, self.y)
-        else:
-            if self.taskname[first_row_size-1] != ' ':
-                if self.front:
-                    G.screen.Highlight(self.taskname[:first_row_size-1]+"-",
-                                         self.x, self.y + status_length + 1)
-                else:
-                    G.screen.Highlight(self.taskname[:first_row_size-1]+"-",
-                                         self.x, self.y)
-                G.screen.Highlight(truncate(self.taskname[first_row_size-1:],
-                                              self.width),
-                                              self.x+1, self.y)
-            elif self.taskname[first_row_size-1] == ' ':
-                if self.front:
-                    G.screen.Highlight(self.taskname[:first_row_size],
-                                         self.x, self.y + status_length + 1)
-                else:
-                    G.screen.Highlight(self.taskname[:first_row_size],
-                                         self.x, self.y)
-                G.screen.Highlight(truncate(self.taskname[first_row_size:],
-                                              self.width),
-                                              self.x+1, self.y)
+        self.DisplayName(self,highlight=True)
 
     def ToggleMarkUp(self):
         self.status.ToggleMarkUp()
@@ -196,57 +172,57 @@ class MenuItem(object):
         self.HighlightName()
 
     def EnterNewName(self):
-	# Used for changing names of checklist items
-	# and adding new items
-	G.screen.Display(" "*(C.SCR_Y - self.y - 1), self.x, self.y)
-	G.screen.Display(" "*(C.SCR_Y - self.y - 1), self.x+1, self.y)
-	newName = G.screen.StringInput(self.x, self.y)
-	self.task.newName = newName
-	self.taskname = newName # Will be restored if changes are cancelled
+        # Used for changing names of checklist items
+        # and adding new items
+        G.screen.Display(" "*(C.SCR_Y - self.y - 1), self.x, self.y)
+        G.screen.Display(" "*(C.SCR_Y - self.y - 1), self.x+1, self.y)
+        newName = G.screen.StringInput(self.x, self.y)
+        self.task.newName = newName
+        self.taskname = newName # Will be restored if changes are cancelled
 
-	# Clear it up a bit
-	G.screen.Display(" "*(C.SCR_Y - self.y - 1), self.x, self.y)
-	G.screen.Display(" "*(C.SCR_Y - self.y - 1), self.x+1, self.y)
+        # Clear it up a bit
+        G.screen.Display(" "*(C.SCR_Y - self.y - 1), self.x, self.y)
+        G.screen.Display(" "*(C.SCR_Y - self.y - 1), self.x+1, self.y)
 
-	self.HighlightName()
+        self.HighlightName()
 
     def ShowChecklist(self):
-	self.task.ShowChecklist(self)
+        self.task.ShowChecklist(self)
 
     def ChangePriority(self, key):
         self.task.ChangePriority(key)
-	self.status.ToggleEdit()
+        self.status.ToggleEdit()
 
     def ChangeDueDate(self, date):
-	if self.task_type != "todo":
-	    return
+        if self.task_type != "todo":
+            return
 
-	self.task.ChangeDueDate(date)
-	self.status.SetDue(H.DateTime(date).DueDateFormat())
-	self.SetStatusXY()
-	self.status.ToggleEdit()
+        self.task.ChangeDueDate(date)
+        self.status.SetDue(H.DateTime(date).DueDateFormat())
+        self.SetStatusXY()
+        self.status.ToggleEdit()
 
     def RemoveDueDate(self):
-	if self.task_type != "todo":
-	    return
+        if self.task_type != "todo":
+            return
 
-	self.task.RemoveDueDate()
-	self.status.SetDue("")
-	self.status.ToggleEdit()
+        self.task.RemoveDueDate()
+        self.status.SetDue("")
+        self.status.ToggleEdit()
 
     def SetWeekly(self, repeat):
-	if self.task_type != "daily":
-	    return
+        if self.task_type != "daily":
+            return
 
-	self.task.SetWeekly(repeat)
-	self.status.ToggleEdit()
+        self.task.SetWeekly(repeat)
+        self.status.ToggleEdit()
 
     def SetEvery(self, days):
-	if self.task_type != "daily":
-	    return 
+        if self.task_type != "daily":
+            return
 
-	self.task.SetEvery(days)
-	self.status.ToggleEdit()
+        self.task.SetEvery(days)
+        self.status.ToggleEdit()
 
 
 class Menu(object):
@@ -255,14 +231,14 @@ class Menu(object):
 
     def __init__(self, items, title, rows=-1, menu_type = "task"):
         self.items = items           # Item List
-	self.backupItems = []        # Will be used for backing up tasks when
-				     # adding items to checklists
+        self.backupItems = []        # Will be used for backing up tasks when
+                                     # adding items to checklists
         self.title = title
         self.menu_type = menu_type
 
-	# Special behavior of checklist
-	if self.menu_type == "checklist_menu":
-	    self.items.append(T.DummyChecklistItem())
+        # Special behavior of checklist
+        if self.menu_type == "checklist_menu":
+            self.items.append(T.DummyChecklistItem())
 
         # Defining the menu window using start and end
         if rows == -1:
@@ -270,7 +246,7 @@ class Menu(object):
         self.rows = rows
 
         self.start = 0
-        self.end = min(self.rows/2, len(self.items)) 
+        self.end = min(self.rows/2, len(self.items))
         self.current = 0 # Current task number
 
         # Coordinates
@@ -288,10 +264,10 @@ class Menu(object):
         return True
 
     def Init(self):
-	if self.menu_type == "checklist_menu":
-	    G.screen.ClearTextArea()
+        if self.menu_type == "checklist_menu":
+            G.screen.ClearTextArea()
         X, Y = self.x, self.y
-        G.screen.DisplayBold(self.title, X, Y)
+        G.screen.Display(self.title, X, Y, bold=True)
         X += 2
         G.screen.ScrollBar(X, Y-2, self.start, self.end, len(self.items), self.rows)
 
@@ -309,25 +285,25 @@ class Menu(object):
             G.prevTask = G.currentTask
 
         if self.current != self.start:
-	    if self.menu_type == "checklist_menu":
-		self.items[self.current].DisplayName()
+            if self.menu_type == "checklist_menu":
+                self.items[self.current].DisplayName()
             self.current -= 1
             if self.menu_type == "task":
-		G.currentTask = self.items[self.current]
-	    elif self.menu_type == "checklist_menu":
-		self.items[self.current].HighlightName()
+                G.currentTask = self.items[self.current]
+            elif self.menu_type == "checklist_menu":
+                self.items[self.current].HighlightName()
 
         else:
-	    if self.menu_type == "checklist_menu":
-		self.items[self.current].DisplayName()
+            if self.menu_type == "checklist_menu":
+                self.items[self.current].DisplayName()
             self.start -= 1
             self.current -= 1
             self.end -= 1
             if self.menu_type == "task":
                 G.currentTask = self.items[self.current]
             self.Init()       # Reload the menu
-	    if self.menu_type == "checklist_menu":
-		self.items[self.current].HighlightName()
+            if self.menu_type == "checklist_menu":
+                self.items[self.current].HighlightName()
 
     def ScrollDown(self):
         if self.end == len(self.items) and (self.current == self.end - 1):
@@ -337,13 +313,13 @@ class Menu(object):
             G.prevTask = G.currentTask
 
         if self.current != self.end - 1:
-	    if self.menu_type == "checklist_menu":
-		self.items[self.current].DisplayName()
+            if self.menu_type == "checklist_menu":
+                self.items[self.current].DisplayName()
             self.current += 1
             if self.menu_type == "task":
-		G.currentTask = self.items[self.current]
-	    elif self.menu_type == "checklist_menu":
-		self.items[self.current].HighlightName()
+                G.currentTask = self.items[self.current]
+            elif self.menu_type == "checklist_menu":
+                self.items[self.current].HighlightName()
 
         else:
             self.start += 1
@@ -352,44 +328,44 @@ class Menu(object):
             if self.menu_type == "task":
                 G.currentTask = self.items[self.current]
             self.Init()       # Reload the menu
-	    if self.menu_type == "checklist_menu":
-		self.items[self.current].HighlightName()
+            if self.menu_type == "checklist_menu":
+                self.items[self.current].HighlightName()
 
     def Input(self): # This takes control away from Interface
-	# Implemented specially for checklists and similar menus
-	if self.menu_type == "checklist_menu":
-	    self.items[self.current].HighlightName()
-	    DEBUG.Display("(c) confirm; (q) cancel")
-	    self.backupItems = self.items[:-1]
-	while(1):
-	    c = G.screen.GetCharacter()
-	    if c == curses.KEY_UP or c == ord('k'):
-		self.ScrollUp()
-	    elif c == curses.KEY_DOWN or c == ord('j'):
-		self.ScrollDown()
-	    elif c == ord('m'):
-		if self.current != self.end - 1:
-		    self.items[self.current].ToggleMark()
-	    elif c == ord('d'):
-		if self.current != self.end - 1:
-		    self.items[self.current].ToggleDelete()
-	    elif c == ord('\n'):
-		self.items[self.current].EnterNewName()
-		if self.current != self.end - 1:
-		    self.items[self.current].ToggleEdit()
-		else:
-		    self.items[self.current].task.ChangeName()
-		    self.items[self.current].status.SetNewItem()
-		    self.items.append(T.DummyChecklistItem())
+        # Implemented specially for checklists and similar menus
+        if self.menu_type == "checklist_menu":
+            self.items[self.current].HighlightName()
+            DEBUG.Display("(c) confirm; (q) cancel")
+            self.backupItems = self.items[:-1]
+        while(1):
+            c = G.screen.GetCharacter()
+            if c == curses.KEY_UP or c == ord('k'):
+                self.ScrollUp()
+            elif c == curses.KEY_DOWN or c == ord('j'):
+                self.ScrollDown()
+            elif c == ord('m'):
+                if self.current != self.end - 1:
+                    self.items[self.current].ToggleMark()
+            elif c == ord('d'):
+                if self.current != self.end - 1:
+                    self.items[self.current].ToggleDelete()
+            elif c == ord('\n'):
+                self.items[self.current].EnterNewName()
+                if self.current != self.end - 1:
+                    self.items[self.current].ToggleEdit()
+                else:
+                    self.items[self.current].task.ChangeName()
+                    self.items[self.current].status.SetNewItem()
+                    self.items.append(T.DummyChecklistItem())
 
-		    self.Reload()
-		    self.Init()
-		    self.items[self.current].HighlightName()
+                    self.Reload()
+                    self.Init()
+                    self.items[self.current].HighlightName()
 
-	    elif c == ord('q') or c == 27:
-		return 0
-	    elif c == ord('c'):
-		return 1
+            elif c == ord('q') or c == 27:
+                return 0
+            elif c == ord('c'):
+                return 1
 
     def InitialCurrentTask(self):
         G.prevTask = G.currentTask
@@ -397,7 +373,7 @@ class Menu(object):
 
     def Reload(self):
         self.start = 0
-        self.end = min(self.rows/2, len(self.items)) 
+        self.end = min(self.rows/2, len(self.items))
         self.current = 0 # Current task number
 
     def Remove(self, ID):
@@ -407,9 +383,9 @@ class Menu(object):
                 break
 
     def Insert(self, item):
-	self.items.insert(0, item)
-	self.Reload()
-	self.Init()
+        self.items.insert(0, item)
+        self.Reload()
+        self.Init()
 
     def WriteChanges(self):
         for i in self.items:
@@ -431,56 +407,56 @@ class Menu(object):
 
     def WriteChecklistChanges(self, mainTask):
 
-	# This is used only for checklists
-	anyChange = False
-	newChecklist = []
-	newItems = []
-	for i in self.items[:-1]:
-	    if i.status.attributes.get(C.SYMBOL_TICK, False):
-		anyChange = True
-		i.task.Mark()
-		newChecklist += [i.task.data]
-		newItems += [i]
-	    elif i.status.attributes.get(C.SYMBOL_DELETE, False):
-		anyChange = True
-	    elif i.status.attributes.get(C.SYMBOL_EDIT, False): # Name Change
-		anyChange = True
-		i.task.ChangeName()
-		newChecklist += [i.task.data]
-		newItems += [i]
-	    elif i.status.IsNewItem():
-		anyChange = True
-		newChecklist += [i.task.data]
-		newItems += [i]
-	    else:
-		newChecklist += [i.task.data]
-		newItems += [i]
+        # This is used only for checklists
+        anyChange = False
+        newChecklist = []
+        newItems = []
+        for i in self.items[:-1]:
+            if i.status.attributes.get(C.SYMBOL_TICK, False):
+                anyChange = True
+                i.task.Mark()
+                newChecklist += [i.task.data]
+                newItems += [i]
+            elif i.status.attributes.get(C.SYMBOL_DELETE, False):
+                anyChange = True
+            elif i.status.attributes.get(C.SYMBOL_EDIT, False): # Name Change
+                anyChange = True
+                i.task.ChangeName()
+                newChecklist += [i.task.data]
+                newItems += [i]
+            elif i.status.IsNewItem():
+                anyChange = True
+                newChecklist += [i.task.data]
+                newItems += [i]
+            else:
+                newChecklist += [i.task.data]
+                newItems += [i]
 
-	    i.status.Reset()
+            i.status.Reset()
 
-	if not anyChange: # No change, continue.
-	    return
+        if not anyChange: # No change, continue.
+            return
 
-	# Accomodate any deletions
-	self.items = newItems + [self.items[-1]]
-	newItems = []
-	self.Reload()
+        # Accomodate any deletions
+        self.items = newItems + [self.items[-1]]
+        newItems = []
+        self.Reload()
 
-	mainTask.ToggleEdit()
-	mainTask.task.ChangeChecklist(newChecklist)
-	mainTask.status.SetChecklist(mainTask.task.ChecklistTuple())
-	mainTask.SetStatusXY()
-	self.backupItems = []
+        mainTask.ToggleEdit()
+        mainTask.task.ChangeChecklist(newChecklist)
+        mainTask.status.SetChecklist(mainTask.task.ChecklistTuple())
+        mainTask.SetStatusXY()
+        self.backupItems = []
 
     def CancelChecklistChanges(self):
-	for i in self.items:
-	    i.status.Reset()
-	    i.task.newName = ""
-	    i.taskname = i.task.text
+        for i in self.items:
+            i.status.Reset()
+            i.task.newName = ""
+            i.taskname = i.task.text
 
-	self.items = self.backupItems[:] + [self.items[-1]]
-	self.Reload()
-	self.backupItems = []
+        self.items = self.backupItems[:] + [self.items[-1]]
+        self.Reload()
+        self.backupItems = []
 
 
 
@@ -507,7 +483,7 @@ class SimpleTextItem(object):
 
 
 
-class SimpleTextMenu(object): 
+class SimpleTextMenu(object):
     """ Simple scrollable text menu. Used for displaying party chats,
     drop messages etc. """
 
@@ -539,7 +515,7 @@ class SimpleTextMenu(object):
         self.y = y
 
     def SetNumRows(self, numRows):
-	self.num_rows = numRows
+        self.num_rows = numRows
 
         # Menu Window Specifications
         self.start = 0
@@ -553,16 +529,18 @@ class SimpleTextMenu(object):
 
         for i in xrange(self.start, self.end):
             if self.text[i][:3] == "---" or self.text[i][0] == "#":
-                G.screen.DisplayCustomColor(self.text[i], C.SCR_COLOR_LIGHT_GRAY, X, Y)
+                G.screen.Display(self.text[i], X, Y,
+                        color=C.SCR_COLOR_LIGHT_GRAY, bold=True)
                 X += 1
             else:
-                G.screen.DisplayCustomColor(self.text[i], C.SCR_COLOR_WHITE, X, Y)
+                G.screen.Display(self.text[i],X, Y,
+                        color=C.SCR_COLOR_WHITE, bold=True)
                 X += 1
 
     def ScrollUp(self):
         if self.start == 0:
             return
-        
+
         self.start -= 1
         self.end -= 1
         self.Display()
@@ -570,7 +548,7 @@ class SimpleTextMenu(object):
     def ScrollDown(self):
         if self.end == len(self.text):
             return
-        
+
         self.start += 1
         self.end += 1
         self.Display()
